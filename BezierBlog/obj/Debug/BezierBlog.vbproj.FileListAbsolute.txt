@@ -117,3 +117,4 @@ C:\Users\Paula\Desktop\Felipe\BezierBlog\BezierBlog\obj\Debug\BezierBlog.vbproj.
 C:\Users\Paula\Desktop\Felipe\BezierBlog\BezierBlog\obj\Debug\BezierBlog.dll
 C:\Users\Paula\Desktop\Felipe\BezierBlog\BezierBlog\obj\Debug\BezierBlog.xml
 C:\Users\Paula\Desktop\Felipe\BezierBlog\BezierBlog\obj\Debug\BezierBlog.pdb
+C:\Users\Paula\Desktop\Felipe\BezierBlog\BezierBlog\obj\Debug\BezierBlog.vbprojAssemblyReference.cache
