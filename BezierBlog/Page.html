@@ -28,6 +28,7 @@
         uniform float iWeightTwo;
         uniform float iWeightThree;
         uniform float iWeightFour;
+        uniform int iShow;
 
         // By Felipe Gutierrez,
 
@@ -38,11 +39,14 @@
 
         }
 
-        vec2 lerp( vec2 a, vec2 b, float w1, float w2, float t )
+        vec2 lerp( vec2 a, vec2 b, float w1, float w2, float t, out float w )
         {
 
-        return ( ( ( 1.0 - t ) * a * w1 ) + ( b * w2 * t ) ) /
-        ( ( ( 1.0 - t ) * w1 ) + ( w2 * t ) );
+        float temp = ( 1.0 - t ) * w1, tempO = w2 * t;
+        w = temp + tempO;
+
+        return ( temp * a + tempO * b ) /
+        w;
 
         }
 
@@ -266,14 +270,20 @@
         if( iDegree == 3 )
         {
 
+        if( iShow == 1 )
+        {
+
         // Process visualization.
+        float wOut = 0.0, wOutOne = 0.0;
         col += line( col, A, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.3) );
-        vec2 inter = lerp( A, C, w0, w1, t );
+        vec2 inter = lerp( A, C, w0, w1, t, wOut );
         col += cir( inter, rO, bO ) * vec3( 1, 1, 0 );
         col += line( col, D, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.45) );
-        vec2 interT = lerp( D, C, w2, w1, tO );
+        vec2 interT = lerp( D, C, w2, w1, tO, wOutOne );
         col += cir( interT, rO, bO ) * vec3( 1, 1, 0 );
         col += line( col, inter, interT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.6) );
+
+        }
 
         // PointA.
         col += cir( A, rO, bO ) * vec3( 1, 0, 1 );
@@ -292,23 +302,34 @@
         if( iDegree == 4 )
         {
 
+        if( iShow == 1 )
+        {
+
         // Show construction.
+        float wOut = 0.0, wOutOne = 0.0, wOutTwo = 0.0, wOutThree = 0.0, wOutFour = 0.0;
+
         col += line( col, A, B, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.15) );
-        vec2 inter = lerp( A, B, w0, w1, t );
+        vec2 inter = lerp( A, B, w0, w1, t, wOut );
         col += cir( inter, rO, bO ) * vec3( 1, 1, 0 );
         col += line( col, B, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.2) );
-        vec2 interT = lerp( B, C, w1, w2, t );
+
+        vec2 interT = lerp( B, C, w1, w2, t, wOutOne );
         col += cir( interT, rO, bO ) * vec3( 1, 1, 0 );
         col += line( col, C, D, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.25) );
-        vec2 interTh = lerp( C, D, w2, w3, t );
+
+        vec2 interTh = lerp( C, D, w2, w3, t, wOutTwo );
         col += cir( interTh, rO, bO ) * vec3( 1, 1, 0 );
-        vec2 interN = mix( inter, interT, t );
+
+        vec2 interN = lerp( inter, interT, wOut, wOutOne, t, wOutThree );
         col += line( col, inter, interT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.4) );
         col += cir( interN, rO, bO ) * vec3( 1, 1, 0 );
-        vec2 interNT = mix( interT, interTh, t );
+
+        vec2 interNT = lerp( interT, interTh, wOutOne, wOutTwo, t, wOutFour );
         col += line( col, interT, interTh, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.5) );
         col += cir( interNT, rO, bO ) * vec3( 1, 1, 0 );
         col += line( col, interN, interNT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.65) );
+
+        }
 
         // PointA.
         col += cir( A, rO, bO ) * vec3( 1, 0, 1 );
@@ -368,7 +389,8 @@
                 iWeightOne: { type: "f", value: 1.0 },
                 iWeightTwo: { type: "f", value: 1.0 },
                 iWeightThree: { type: "f", value: 1.0 },
-                iWeightFour: { type: "f", value: 1.0 }
+                iWeightFour: { type: "f", value: 1.0 },
+                iShow: { type: "i", value: 0 }
             };
 
             var material = new THREE.ShaderMaterial({
@@ -448,6 +470,7 @@
             gui.add( uniforms.iWeightTwo, "value", 0, 5 ).name( "WeightTwo" );
             gui.add( uniforms.iWeightThree, "value", 0, 5 ).name( "WeightThree" );
             gui.add( uniforms.iWeightFour, "value", 0, 5 ).name( "WeightFour" );
+            gui.add( uniforms.iShow, "value", { No: 0, Yes: 1 } ).name( "ShowConstruction" );
 
         }
 
