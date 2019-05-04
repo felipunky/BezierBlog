@@ -1,12 +1,11 @@
 ﻿<html>
 <head>
     <title>Bézier Curves</title>
-    <link rel="stylesheet"
-          type="text/css"
-          href="StyleSheet.scss" />
+    <link rel="stylesheet" href="StyleSheet.css">
 </head>
 <body>
     <div id="container"></div>
+    <h1 id="GUIContainer">Rational Bézier Curves</h1>
     <script src="three.min.js"></script>
     <script src="dat.gui.min.js"></script>
     <script id="vertexShader" type="x-shader/x-vertex">
@@ -15,6 +14,7 @@
         }
     </script>
     <script id="fragmentShader" type="x-shader/x-fragment">
+        // By Felipe Gutierrez,
 
         #extension GL_EXT_shader_texture_lod : enable
         #extension GL_OES_standard_derivatives : enable
@@ -29,8 +29,11 @@
         uniform float iWeightThree;
         uniform float iWeightFour;
         uniform int iShow;
-
-        // By Felipe Gutierrez,
+        uniform float iIterationsSize;
+        uniform float iPointSize;
+        uniform float iBlurIteration;
+        uniform float iBlurPoint;
+        uniform float iSpeed;
 
         float lerp( float a, float b, float t )
         {
@@ -133,14 +136,13 @@
         vec2 uv = gl_FragCoord.xy / iResolution.y;
         vec2 mou = iMouse.xy / iResolution.y;
 
-        //mou = iMouse.x < 0.1 ? vec2( 1.3, 0.2 ) : mou;
-
-        // r = size of interpolation, rO = size of points.
-        float r = 0.007, rO = 0.015, b = 0.02, bO = 0.005;
+        // r = size of interpolation, rO = size of points, b = blur of iterations, bO = blur of points.
+        float r = iIterationsSize, rO = iPointSize, b = iBlurIteration, bO = iBlurPoint;
 
         vec3 col = vec3( 0 );
 
         // Points coordinates:
+        mou = iMouse.x < 0.1 ? vec2( 1.3, 0.2 ) : mou;
         vec2 A = uv - vec2( 0.1, 0.5 );
         vec2 B = uv - vec2( 0.5, 0.9 );
         vec2 C = uv - mou;
@@ -251,7 +253,7 @@
         }
 
         // Visualizing time t parameter of the basis-functions ( we have to reparametrize our t from 0 to 1, so + 0.5 amplitude and * 0.5):
-        float t = 0.5 + sin( iTime * 0.5 ) * 0.5, tO = ( 1.0 - t );
+        float t = 0.5 + sin( iTime * iSpeed ) * 0.5, tO = ( 1.0 - t );
 
         if( iDegree == 2 )
         {
@@ -275,13 +277,13 @@
 
         // Process visualization.
         float wOut = 0.0, wOutOne = 0.0;
-        col += line( col, A, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.3) );
+        col = line( col, A, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.6) );
         vec2 inter = lerp( A, C, w0, w1, t, wOut );
-        col += cir( inter, rO, bO ) * vec3( 1, 1, 0 );
-        col += line( col, D, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.45) );
+        col += cir( inter, rO, bO ) * vec3( 1, 0.25, 0 );
+        col = line( col, D, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.6) );
         vec2 interT = lerp( D, C, w2, w1, tO, wOutOne );
-        col += cir( interT, rO, bO ) * vec3( 1, 1, 0 );
-        col += line( col, inter, interT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.6) );
+        col += cir( interT, rO, bO ) * vec3( 1, 0.25, 0 );
+        col = line( col, inter, interT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.6) );
 
         }
 
@@ -308,26 +310,26 @@
         // Show construction.
         float wOut = 0.0, wOutOne = 0.0, wOutTwo = 0.0, wOutThree = 0.0, wOutFour = 0.0;
 
-        col += line( col, A, B, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.15) );
+        col = line( col, A, B, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.65) );
         vec2 inter = lerp( A, B, w0, w1, t, wOut );
         col += cir( inter, rO, bO ) * vec3( 1, 1, 0 );
-        col += line( col, B, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.2) );
+        col = line( col, B, C, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.65) );
 
         vec2 interT = lerp( B, C, w1, w2, t, wOutOne );
         col += cir( interT, rO, bO ) * vec3( 1, 1, 0 );
-        col += line( col, C, D, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.25) );
+        col = line( col, C, D, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.65) );
 
         vec2 interTh = lerp( C, D, w2, w3, t, wOutTwo );
         col += cir( interTh, rO, bO ) * vec3( 1, 1, 0 );
 
         vec2 interN = lerp( inter, interT, wOut, wOutOne, t, wOutThree );
-        col += line( col, inter, interT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.4) );
-        col += cir( interN, rO, bO ) * vec3( 1, 1, 0 );
+        col = line( col, inter, interT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.65) );
+        col += cir( interN, rO, bO ) * vec3( 1, 0.25, 0 );
 
         vec2 interNT = lerp( interT, interTh, wOutOne, wOutTwo, t, wOutFour );
-        col += line( col, interT, interTh, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.5) );
-        col += cir( interNT, rO, bO ) * vec3( 1, 1, 0 );
-        col += line( col, interN, interNT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.65) );
+        col = line( col, interT, interTh, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.65) );
+        col += cir( interNT, rO, bO ) * vec3( 1, 0.25, 0 );
+        col = line( col, interN, interNT, vec2( 0.0005 ), vec2(0.0025,2.0), vec4(0.65) );
 
         }
 
@@ -384,13 +386,18 @@
                 iTime: { type: "f", value: 1.0 },
                 iResolution: { type: "v2", value: new THREE.Vector2() },
                 iMouse: { type: "v3", value: new THREE.Vector3() },
-                iDegree: { type: "i", value: 3 },
-                iIterations: { type: "i", value: 100 },
+                iDegree: { type: "i", value: 4 },
+                iIterations: { type: "i", value: 500 },
                 iWeightOne: { type: "f", value: 1.0 },
                 iWeightTwo: { type: "f", value: 1.0 },
                 iWeightThree: { type: "f", value: 1.0 },
                 iWeightFour: { type: "f", value: 1.0 },
-                iShow: { type: "i", value: 0 }
+                iShow: { type: "i", value: 1 },
+                iIterationsSize: { type: "f", value: 0.013 },
+                iPointSize: { type: "f", value: 0.015 },
+                iBlurIteration: { type: "f", value: 0.03 },
+                iBlurPoint: { type: "f", value: 0.005 },
+                iSpeed: { type: "f", value: 0.2 }
             };
 
             var material = new THREE.ShaderMaterial({
@@ -405,32 +412,30 @@
             onWindowResize();
             window.addEventListener('resize', onWindowResize, false);
 
-            document.onmousemove = function (e)
+            document.getElementById("container").onmousemove = function (e)
             {
 
                 if (uniforms.iMouse.value.z == 1)
                 { 
 
                     uniforms.iMouse.value.x = e.pageX;
-                    uniforms.iMouse.value.y = window.innerHeight / 2 - e.pageY;
+                    uniforms.iMouse.value.y = window.innerHeight * 0.5 - e.pageY;
 
                 }
 
             }
             
-            document.onmousedown = function (e)
+            document.getElementById( "container" ).onmousedown = function (e)
             {
 
                 uniforms.iMouse.value.z = 1;
 
             }
 
-            document.onmouseup = function (e)
+            document.getElementById( "container" ).onmouseup = function (e)
             {
 
                 uniforms.iMouse.value.z = 0;
-                uniforms.iMouse.value.x = e.pageX;
-                uniforms.iMouse.value.y = window.innerHeight / 2 - e.pageY;
 
             }
 
@@ -439,7 +444,7 @@
 
         function onWindowResize(event) {
 
-            renderer.setSize(window.innerWidth, window.innerHeight / 2);
+            renderer.setSize(window.innerWidth, window.innerHeight * 0.5);
             uniforms.iResolution.value.x = renderer.domElement.width;
             uniforms.iResolution.value.y = renderer.domElement.height;
 
@@ -455,27 +460,76 @@
         function render() {
 
             uniforms.iTime.value += 0.05;
-            renderer.render(scene, camera);
+            renderer.render( scene, camera );
 
         }
 
         function addGUI()
         {
 
-            const gui = new dat.GUI();
+            //var gui = new dat.GUI({ autoPlace: false });
+            var gui = new dat.GUI();
 
-            gui.add( uniforms.iDegree, "value", 2, 4, 1 ).name( "Degree" );
-            gui.add( uniforms.iIterations, "value", 100, 500, 100 ).name( "Iterations" );
-            gui.add( uniforms.iWeightOne, "value", 0, 5 ).name( "WeightOne" );
-            gui.add( uniforms.iWeightTwo, "value", 0, 5 ).name( "WeightTwo" );
-            gui.add( uniforms.iWeightThree, "value", 0, 5 ).name( "WeightThree" );
-            gui.add( uniforms.iWeightFour, "value", 0, 5 ).name( "WeightFour" );
-            gui.add( uniforms.iShow, "value", { No: 0, Yes: 1 } ).name( "ShowConstruction" );
+            var degree = gui.add( uniforms.iDegree, "value", 2, 4, 1 ).name( "Degree" ).listen();
+            degree.onChange( function( value )
+            {
+
+                if( value === 3 || value == 2 )
+                {
+
+                    weightFour.domElement.style.pointerEvents = "none";
+                    //weightFour.domElement.parentElement.style.visibility = "hidden";
+                    weightFour.domElement.style.opacity = 0.5;
+
+                }
+
+                else
+                {
+
+                    weightFour.domElement.style.pointerEvents = "auto";
+                    //weightFour.domElement.parentElement.style.visibility = "visible";
+                    weightFour.domElement.style.opacity = 1.0;
+
+                }
+                
+                if( value === 2 )
+                {
+
+                    weightThree.domElement.style.pointerEvents = "none";
+                    //weightThree.domElement.parentElement.style.visibility = "hidden";
+                    weightThree.domElement.style.opacity = 0.5;
+
+                }
+
+                else
+                {
+
+                    weightThree.domElement.style.pointerEvents = "auto";
+                    //weightThree.domElement.parentElement.style.visibility = "visible";
+                    weightThree.domElement.style.opacity = 1.0;
+
+                }
+
+            });
+            var speed = gui.add( uniforms.iSpeed, "value", 0.0, 2.0, 0.1 ).name( "Speed" );
+            var iterations = gui.add( uniforms.iIterations, "value", 100, 500, 100 ).name( "Iterations" );
+            var construction = gui.add( uniforms.iShow, "value", { No: 0, Yes: 1 }).name( "ShowConstruction" );
+            var iterationSize = gui.add( uniforms.iIterationsSize, "value", 0.0025, 0.02, 0.001 ).name( "SizeOfIterations" );
+            var pointSize = gui.add( uniforms.iPointSize, "value", 0.010, 0.1, 0.01 ).name( "SizeOfPoints" );
+            var iterationBlur = gui.add( uniforms.iBlurIteration, "value", 0.01, 0.4, 0.01 ).name( "BlurOfIterations" );
+            var pointBlur = gui.add( uniforms.iBlurPoint, "value", 0.001, 0.01, 0.001 ).name( "BlurOfPoints" );
+
+            var weightsFolder = gui.addFolder( "Weights" );
+            var weightOne = weightsFolder.add( uniforms.iWeightOne, "value", 0, 5 ).name( "WeightOne" );
+            var weightTwo   = weightsFolder.add( uniforms.iWeightTwo, "value", 0, 5 ).name( "WeightTwo" );
+            var weightThree = weightsFolder.add( uniforms.iWeightThree, "value", 0, 5 ).name( "WeightThree" ).listen();
+            var weightFour = weightsFolder.add( uniforms.iWeightFour, "value", 0, 5 ).name( "WeightFour" ).listen();
+            
+            var customContainer = document.getElementById("GUIContainer");
+            customContainer.appendChild( gui.domElement );
 
         }
 
     </script>
-
 </body>
-
 </html>
